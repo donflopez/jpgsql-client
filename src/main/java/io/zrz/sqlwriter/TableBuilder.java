@@ -8,6 +8,13 @@ import static io.zrz.sqlwriter.SqlKeyword.EXISTS;
 import static io.zrz.sqlwriter.SqlKeyword.IF;
 import static io.zrz.sqlwriter.SqlKeyword.LIKE;
 import static io.zrz.sqlwriter.SqlKeyword.LIST;
+import static io.zrz.sqlwriter.SqlKeyword.RANGE;
+import static io.zrz.sqlwriter.SqlKeyword.OF;
+import static io.zrz.sqlwriter.SqlKeyword.FOR;
+import static io.zrz.sqlwriter.SqlKeyword.VALUES;
+import static io.zrz.sqlwriter.SqlKeyword.IN;
+import static io.zrz.sqlwriter.SqlKeyword.FROM;
+import static io.zrz.sqlwriter.SqlKeyword.TO;
 import static io.zrz.sqlwriter.SqlKeyword.LOCAL;
 import static io.zrz.sqlwriter.SqlKeyword.NOT;
 import static io.zrz.sqlwriter.SqlKeyword.ON;
@@ -38,6 +45,16 @@ public class TableBuilder implements SqlGenerator {
   private boolean unlogged;
 
   private String partitionList;
+  
+  private String partitionRange;
+
+  private String partitionOf;
+
+  private String partitionFrom;
+
+  private String partitionTo;
+
+  private String partitionIn;
 
   private boolean ifNotExists;
 
@@ -145,13 +162,39 @@ public class TableBuilder implements SqlGenerator {
 
       w.writeEndExpr();
 
-      if (this.partitionList != null) {
+      if (this.partitionOf != null) {
+        final Boolean isList = this.partitionIn != null;
+
+        w.writeKeyword(PARTITION);
+        w.writeKeyword(OF);
+        w.writeIdent(this.partitionOf);
+        w.writeKeyword(FOR);
+        w.writeKeyword(VALUES);
+        if (isList) {
+          w.writeKeyword(IN);
+          w.writeStartExpr();
+          w.writeIdent(this.partitionIn);
+          w.writeEndExpr();
+        }
+        else {
+          w.writeKeyword(FROM);
+          w.writeStartExpr();
+          w.writeIdent(this.partitionFrom);
+          w.writeEndExpr();
+          w.writeKeyword(TO);
+          w.writeStartExpr();
+          w.writeIdent(this.partitionTo);
+          w.writeEndExpr();
+        }
+      }
+      else if (this.partitionList != null || this.partitionRange != null) {
+        final Boolean isList = this.partitionList != null;
 
         w.writeKeyword(PARTITION);
         w.writeKeyword(BY);
-        w.writeKeyword(LIST);
+        w.writeKeyword(isList ? LIST : RANGE);
         w.writeStartExpr();
-        w.writeIdent(partitionList);
+        w.writeIdent(isList ? partitionList : partitionRange);
         w.writeEndExpr();
 
         w.writeNewline(false);
@@ -205,6 +248,30 @@ public class TableBuilder implements SqlGenerator {
 
   public TableBuilder partitionedByList(String column) {
     this.partitionList = column;
+    this.partitionRange = null;
+    return this;
+  }
+
+  public TableBuilder partitionedByRange(String column) {
+    // NOTE: allow add multiple columns like String...
+    this.partitionRange = column;
+    this.partitionList = null;
+    return this;
+  }
+
+  public TableBuilder isPartitionOf(String tableName) {
+    this.partitionOf = tableName;
+    return this;
+  }
+
+  public TableBuilder forValuesFrom(String from, String to) {
+    this.partitionFrom = from;
+    this.partitionTo = to;
+    return this;
+  }
+
+  public TableBuilder forValuesIn(String values) {
+    this.partitionIn = values;
     return this;
   }
 

@@ -48,7 +48,7 @@ public class TableBuilder implements SqlGenerator {
   
   private String partitionRange;
 
-  private String partitionOf;
+  private DbIdent partitionOf;
 
   private String partitionFrom;
 
@@ -259,7 +259,7 @@ public class TableBuilder implements SqlGenerator {
     return this;
   }
 
-  public TableBuilder isPartitionOf(String tableName) {
+  public TableBuilder isPartitionOf(DbIdent tableName) {
     this.partitionOf = tableName;
     return this;
   }
@@ -315,6 +315,10 @@ public class TableBuilder implements SqlGenerator {
 
   public static TableBuilder ofType(DbIdent tableName, DbIdent typeName) {
     return new TableBuilder(tableName, typeName);
+  }
+
+  public static TableBuilder asPartition(DbIdent tableName, DbIdent parentName) {
+    return new TableBuilder(tableName).isPartitionOf(parentName);
   }
 
   public TableBuilder fillFactor(int factor) {

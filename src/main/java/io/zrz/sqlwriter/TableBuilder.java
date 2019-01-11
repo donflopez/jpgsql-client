@@ -129,8 +129,10 @@ public class TableBuilder implements SqlGenerator {
         w.writeIdent(this.ofType);
       }
 
-      w.writeStartExpr();
-      w.writeNewline();
+      if (this.partitionRange == null && this.partitionOf == null) {
+        w.writeStartExpr();
+        w.writeNewline();
+      }
 
       if (this.like != null) {
         w.writeKeyword(LIKE);
@@ -158,9 +160,10 @@ public class TableBuilder implements SqlGenerator {
 
       }
 
-      w.writeNewline();
-
-      w.writeEndExpr();
+      if (this.partitionRange == null && this.partitionOf == null) {
+        w.writeNewline();
+        w.writeEndExpr();
+      }
 
       if (this.partitionOf != null) {
         final Boolean isList = this.partitionIn != null;
